@@ -1,0 +1,40 @@
+# Common parameters
+ROM ?= 48K
+RAM ?= 10K
+
+# CPU Makefile
+MCU=msp430f1611
+CONTIKI_CPU=$(CONTIKI)/cpu/msp430
+include $(CONTIKI_CPU)/Makefile.msp430
+
+# Use sancus-cc for all files listed in SM_FILES
+# NOTE: the if... filter... cruft just checks if the file name equals
+# $(CONTIKI_PROJECT).c
+define SM_RULES =
+SM_OBJECT_$(1) = \
+    $(if $(filter $(CONTIKI_PROJECT).c,$(1)),\
+         $(CONTIKI_PROJECT).co,\
+         $(OBJECTDIR)/$(basename $(1)).o)
+
+$$(SM_OBJECT_$(1)): CC = sancus-cc
+endef
+
+$(foreach FILE,$(SM_FILES),$(eval $(call SM_RULES,$(FILE))))
+
+# Add all files in SM_FILES to PROJECT_SOURCEFILES
+PROJECT_SOURCEFILES += $(SM_FILES)
+
+# Use sancus-ld for linking
+LD = sancus-ld
+LDFLAGS += --standalone --rom $(ROM) --ram $(RAM) -Wl,-u,putchar
+
+# Add this directory to the target dirs so that sources and headers will be
+# found here. Note the Contiki's Makefiles will add the target's directory as a
+# prefix so this path is relative to the target's.
+CONTIKI_TARGET_DIRS += ../common
+
+# Add common source files
+CONTIKI_TARGET_SOURCEFILES += event-loop.c
+
+# Add all target files to the Contiki source file
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)

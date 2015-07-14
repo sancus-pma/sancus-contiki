@@ -1,0 +1,20 @@
+CONTIKI_TARGET_DIRS = .
+CONTIKI_TARGET_MAIN = main.c
+CONTIKI_TARGET_SOURCEFILES = putchar.c
+
+include $(dir $(target_makefile))../common/Makefile.include
+
+# Try to find the sancus-support libraries
+SEARCH_DIRS = /usr/share/sancus-support /usr/local/share/sancus-support
+BASE_DIR = $(firstword $(foreach DIR,$(SEARCH_DIRS),$(wildcard $(DIR))))
+
+ifeq ($(BASE_DIR),)
+$(error "Unable to find the sancus-support library")
+endif
+
+CFLAGS += -I$(BASE_DIR)/include
+LDFLAGS += -L$(BASE_DIR)/lib -ldev
+
+run: $(CONTIKI_PROJECT).$(TARGET)
+	sancus-sim --rom=$(ROM) --ram=$(RAM) $^
+
