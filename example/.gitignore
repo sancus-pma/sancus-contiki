@@ -1,4 +1,5 @@
 *.a
 *.map
 example.sancus-*
+sancus_sim.fst
 obj_*/
