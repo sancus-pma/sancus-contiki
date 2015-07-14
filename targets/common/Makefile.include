@@ -17,6 +17,7 @@ SM_OBJECT_$(1) = \
          $(OBJECTDIR)/$(basename $(1)).o)
 
 $$(SM_OBJECT_$(1)): CC = sancus-cc
+$$(SM_OBJECT_$(1)): CFLAGS = $(filter-out -gstabs+,$(CFLAGS))
 endef
 
 $(foreach FILE,$(SM_FILES),$(eval $(call SM_RULES,$(FILE))))
