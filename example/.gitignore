@@ -2,4 +2,6 @@
 *.map
 example.sancus-*
 sancus_sim.fst
+sim-input.bin
+sim-output.bin
 obj_*/
