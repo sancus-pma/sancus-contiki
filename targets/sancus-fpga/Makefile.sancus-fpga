@@ -1,3 +1,6 @@
+DEV  ?= /dev/ttyUSB0
+BAUD ?= 115200
+
 CONTIKI_TARGET_DIRS = .
 CONTIKI_TARGET_MAIN = main.c
 CONTIKI_TARGET_SOURCEFILES = putchar.c
@@ -15,6 +18,10 @@ endif
 CFLAGS += -I$(BASE_DIR)/include
 LDFLAGS += -L$(BASE_DIR)/lib -ldev
 
+TMP_ELF := $(shell mktemp --suffix=.elf)
+
 run: $(CONTIKI_PROJECT).$(TARGET)
-	sancus-sim --rom=$(ROM) --ram=$(RAM) $^
+	cp $^ $(TMP_ELF)
+	sancus-loader -device $(DEV) -baudrate $(BAUD) $(TMP_ELF)
+	rm -f $(TMP_ELF)
 
