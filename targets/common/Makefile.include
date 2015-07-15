@@ -1,6 +1,6 @@
 # Common parameters
-ROM ?= 48K
-RAM ?= 10K
+ROM ?= 41K
+RAM ?= 16K
 
 # CPU Makefile
 MCU=msp430f1611
