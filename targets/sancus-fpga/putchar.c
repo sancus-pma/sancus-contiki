@@ -5,7 +5,6 @@ int putchar(int c)
     if (c == '\n')
         putchar('\r');
 
-    uart_write_byte(c);
+    uart2_write_byte(c);
     return c;
 }
-

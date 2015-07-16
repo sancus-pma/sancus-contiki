@@ -12,4 +12,6 @@ SM_FILES = sm.c
 TARGETDIRS += ../targets
 # Should point to <GIT_ROOT>/contiki
 CONTIKI = ../contiki
+
+CONTIKI_WITH_IPV4 = 1
 include $(CONTIKI)/Makefile.include

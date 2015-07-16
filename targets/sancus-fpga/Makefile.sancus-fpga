@@ -3,7 +3,7 @@ BAUD ?= 115200
 
 CONTIKI_TARGET_DIRS = .
 CONTIKI_TARGET_MAIN = main.c
-CONTIKI_TARGET_SOURCEFILES = putchar.c
+CONTIKI_TARGET_SOURCEFILES = putchar.c networking.c
 
 include $(dir $(target_makefile))../common/Makefile.include
 
@@ -24,4 +24,4 @@ run: $(CONTIKI_PROJECT).$(TARGET)
 	cp $^ $(TMP_ELF)
 	sancus-loader -device $(DEV) -baudrate $(BAUD) $(TMP_ELF)
 	rm -f $(TMP_ELF)
-
+	screen $(DEV) $(BAUD)
