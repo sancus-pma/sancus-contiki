@@ -1,5 +1,5 @@
 # Should be the name of the main .c file without the extension
-CONTIKI_PROJECT = example
+CONTIKI_PROJECT = hello-world
 all: $(CONTIKI_PROJECT)
 
 # Add files that should be compiled with the Sancus compiler to SM_FILES
@@ -9,9 +9,9 @@ SM_FILES = sm.c
 # to PROJECT_SOURCEFILES
 
 # Should point to <GIT_ROOT>/targets
-TARGETDIRS += ../targets
+TARGETDIRS += ../../targets
 # Should point to <GIT_ROOT>/contiki
-CONTIKI = ../contiki
+CONTIKI = ../../contiki
 
 CONTIKI_WITH_IPV4 = 1
 include $(CONTIKI)/Makefile.include

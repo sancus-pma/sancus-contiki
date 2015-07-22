@@ -1,6 +1,7 @@
 *.a
 *.map
-example.sancus-*
+*.sancus-sim
+*.sancus-fpga
 sancus_sim.fst
 sim-input.bin
 sim-output.bin
