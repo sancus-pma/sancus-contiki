@@ -25,6 +25,30 @@ $(foreach FILE,$(SM_FILES),$(eval $(call SM_RULES,$(FILE))))
 # Add all files in SM_FILES to PROJECT_SOURCEFILES
 PROJECT_SOURCEFILES += $(SM_FILES)
 
+# Try to find the sancus-compiler libraries
+SANCUS_COMPILER_SEARCH_DIRS = /usr/share/sancus-compiler /usr/local/share/sancus-compiler
+SANCUS_COMPILER_BASE_DIR = $(firstword $(foreach DIR,$(SANCUS_COMPILER_SEARCH_DIRS),$(wildcard $(DIR))))
+
+ifeq ($(SANCUS_COMPILER_BASE_DIR),)
+$(error "Unable to find the sancus-compiler library")
+endif
+
+# Add include dirs and libraries
+CFLAGS += -I$(SANCUS_COMPILER_BASE_DIR)/include
+LDFLAGS += -L$(SANCUS_COMPILER_BASE_DIR)/lib -lsancus-host-support -lsancus-sm-support
+
+# Try to find the sancus-support libraries
+SANCUS_SUPPORT_SEARCH_DIRS = /usr/share/sancus-support /usr/local/share/sancus-support
+SANCUS_SUPPORT_BASE_DIR = $(firstword $(foreach DIR,$(SANCUS_SUPPORT_SEARCH_DIRS),$(wildcard $(DIR))))
+
+ifeq ($(SANCUS_SUPPORT_BASE_DIR),)
+$(error "Unable to find the sancus-support library")
+endif
+
+# Add include dirs and libraries
+CFLAGS += -I$(SANCUS_SUPPORT_BASE_DIR)/include
+LDFLAGS += -L$(SANCUS_SUPPORT_BASE_DIR)/lib
+
 # Use sancus-ld for linking
 LD = sancus-ld
 LDFLAGS += --standalone --rom $(ROM) --ram $(RAM) -Wl,-u,putchar
