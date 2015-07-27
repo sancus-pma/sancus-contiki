@@ -59,7 +59,7 @@ LDFLAGS += --standalone --rom $(ROM) --ram $(RAM) -Wl,-u,putchar
 CONTIKI_TARGET_DIRS += ../common
 
 # Add common source files
-CONTIKI_TARGET_SOURCEFILES += event-loop.c
+CONTIKI_TARGET_SOURCEFILES += event-loop.c clock.c
 
 # Add all target files to the Contiki source file
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)

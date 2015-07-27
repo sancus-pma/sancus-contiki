@@ -4,7 +4,9 @@
 
 void event_loop_init()
 {
+    clock_init();
     process_init();
+    process_start(&etimer_process, NULL);
 }
 
 void event_loop_start()
@@ -16,6 +18,7 @@ void event_loop_start()
         int nEvents;
         do
         {
+            etimer_request_poll();
             nEvents = process_run();
         }
         while (nEvents > 0);
