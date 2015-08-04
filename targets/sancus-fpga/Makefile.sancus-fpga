@@ -8,7 +8,7 @@ CONTIKI_TARGET_SOURCEFILES = putchar.c networking.c
 include $(dir $(target_makefile))../common/Makefile.include
 
 # Add needed sancus-support libraries
-LDFLAGS += -ldev -lmalloc
+TARGET_LIBFILES += -ldev -lmalloc
 
 TMP_ELF := $(shell mktemp --suffix=.elf)
 
