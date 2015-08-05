@@ -1,0 +1,17 @@
+sm-loader_src = sm-loader.c static-symtab.c
+
+# Try to find the sancus-support libraries
+SANCUS_SUPPORT_SEARCH_DIRS = /usr/share/sancus-support /usr/local/share/sancus-support
+SANCUS_SUPPORT_BASE_DIR = $(firstword $(foreach DIR,$(SANCUS_SUPPORT_SEARCH_DIRS),$(wildcard $(DIR))))
+
+ifeq ($(SANCUS_SUPPORT_BASE_DIR),)
+$(error "Unable to find the sancus-support library")
+endif
+
+SM_LOADER_PORT ?= 2000
+
+CFLAGS += -DSM_LOADER_PORT=$(SM_LOADER_PORT) -I$(SANCUS_SUPPORT_BASE_DIR)/include
+# This forces the linker to include these symbols from static-symtab.c.
+# Otherwise, they will be taken from libloader.
+LDFLAGS += -Wl,-u,static_symbols -Wl,-u,num_static_symbols
+TARGET_LIBFILES += -L$(SANCUS_SUPPORT_BASE_DIR)/lib -lsm-control -lloader -ltools
