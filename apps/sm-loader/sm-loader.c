@@ -1,7 +1,10 @@
+#include "symtab-reader.h"
+
 #include "contiki-net.h"
 
 #include <sancus_support/sm_control.h>
 #include <sancus_support/tools.h>
+#include <sancus_support/global_symtab.h>
 
 #include <stdio.h>
 
@@ -15,6 +18,8 @@ struct
     uint16_t bytes_read;
     uint16_t bytes_left;
     uint8_t* buffer;
+    sm_id    sm_id;
+    char*    symtab_data;
 } current_session;
 
 static sm_id load_sm_from_buffer()
@@ -92,6 +97,8 @@ static PT_THREAD(handle_connection(struct psock* p))
     current_session.buffer = session_buffer;
     current_session.bytes_read = bytes_left;
     current_session.bytes_left = packet_size - bytes_left;
+    current_session.sm_id = 0;
+    current_session.symtab_data = NULL;
 
     while (current_session.bytes_left > 0)
     {
@@ -103,11 +110,15 @@ static PT_THREAD(handle_connection(struct psock* p))
         current_session.bytes_left -= len;
     }
 
-    sm_id id = load_sm_from_buffer();
+    current_session.sm_id = load_sm_from_buffer();
     free(current_session.buffer);
 
-    uint16_t id_to_send = uip_htons(id);
+    uint16_t id_to_send = uip_htons(current_session.sm_id);
     PSOCK_SEND(p, (uint8_t*)&id_to_send, sizeof(id_to_send));
+
+    current_session.symtab_data = read_symtab_for_sm(current_session.sm_id);
+    PSOCK_SEND(p, (uint8_t*)current_session.symtab_data,
+                  strlen(current_session.symtab_data) + 1);
 
     PSOCK_CLOSE(p);
     PSOCK_END(p);

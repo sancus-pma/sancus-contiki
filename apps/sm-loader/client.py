@@ -22,6 +22,20 @@ def unpack_int(buf):
     return struct.unpack('!H', buf)[0]
 
 
+def recv_vendor_id(s):
+    return unpack_int(s.recv(2))
+
+
+def recv_symtab(s):
+    symtab_data = bytearray()
+
+    while True:
+        symtab_data += s.recv(4096)
+
+        if symtab_data[-1] == 0:
+            return symtab_data.decode('ascii')
+
+
 def create_data(file, name, vid):
     # The packet format is [LEN NAME \0 VID ELF_FILE]
     # LEN is the length of the packet without LEN itself
@@ -57,5 +71,7 @@ args = parser.parse_args()
 
 with socket.create_connection((args.server, args.port), timeout=2) as s:
     s.sendall(create_data(args.file, args.sm_name, args.vendor_id))
-    sm_id = unpack_int(s.recv(2))
+    sm_id = recv_vendor_id(s)
     print('SM "{}" loaded with id {}'.format(args.sm_name, sm_id))
+    symtab = recv_symtab(s)
+    print(symtab)
