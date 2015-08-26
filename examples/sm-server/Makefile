@@ -2,8 +2,9 @@
 CONTIKI_PROJECT = sm-server
 all: $(CONTIKI_PROJECT)
 
-APPS = sm-loader
+APPS = sm-loader reactive
 SM_LOADER_PORT = 2000
+REACTIVE_PORT = 2001
 
 # Should point to <GIT_ROOT>/targets
 TARGETDIRS += ../../targets

@@ -1,0 +1,14 @@
+reactive_src = reactive.c connections.c
+
+# Try to find the sancus-support libraries
+SANCUS_SUPPORT_SEARCH_DIRS = /usr/share/sancus-support /usr/local/share/sancus-support
+SANCUS_SUPPORT_BASE_DIR = $(firstword $(foreach DIR,$(SANCUS_SUPPORT_SEARCH_DIRS),$(wildcard $(DIR))))
+
+ifeq ($(SANCUS_SUPPORT_BASE_DIR),)
+$(error "Unable to find the sancus-support library")
+endif
+
+REACTIVE_PORT ?= 2001
+
+CFLAGS += -DREACTIVE_PORT=$(REACTIVE_PORT) -I$(SANCUS_SUPPORT_BASE_DIR)/include
+TARGET_LIBFILES += -L$(SANCUS_SUPPORT_BASE_DIR)/lib -lsm-control -ltools
