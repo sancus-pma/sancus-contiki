@@ -119,6 +119,7 @@ static PT_THREAD(handle_connection(struct psock* p))
     current_session.symtab_data = read_symtab_for_sm(current_session.sm_id);
     PSOCK_SEND(p, (uint8_t*)current_session.symtab_data,
                   strlen(current_session.symtab_data) + 1);
+    free(current_session.symtab_data);
 
     PSOCK_CLOSE(p);
     PSOCK_END(p);
