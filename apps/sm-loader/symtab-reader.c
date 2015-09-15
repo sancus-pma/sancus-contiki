@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 
+static const size_t BUFFER_INIT_SIZE = 1024;
 static const size_t BUFFER_INCREMENT = 128;
 
 static char* buffer = NULL;
@@ -15,8 +16,19 @@ static size_t buffer_size = 0, buffer_index = 0;
 
 static int increase_buffer_size()
 {
+    if (buffer == NULL)
+    {
+        buffer = malloc(BUFFER_INIT_SIZE);
+
+        if (buffer == NULL)
+            return 0;
+
+        buffer_size = BUFFER_INIT_SIZE;
+        return 1;
+    }
+
     size_t new_size = buffer_size + BUFFER_INCREMENT;
-    void* new_buffer = malloc(new_size);
+    char* new_buffer = malloc(new_size);
 
     if (new_buffer == NULL)
         return 0;
