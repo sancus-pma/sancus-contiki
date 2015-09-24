@@ -6,6 +6,7 @@
 
 STATIC_SYMBOLS_START
     SYMBOL(exit),
+    SYMBOL(putchar),
     SYMBOL(puts),
     SYMBOL(printf),
     SYMBOL(__unprotected_entry)
