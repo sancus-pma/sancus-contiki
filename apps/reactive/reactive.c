@@ -23,7 +23,24 @@ typedef enum
     ErrIllegalCommand = 0x1,
     ErrPayloadFormat  = 0x2,
     ErrInternal       = 0x3
+} ResultCode;
+
+typedef struct
+{
+    // Should be a ResultCode. Stored as uint8_t to make sure it has the
+    // correct size.
+    uint8_t code;
+    size_t  payload_size;
+    void*   payload;
 } Result;
+
+#define RESULT(code)                 (Result){code, 0, NULL}
+#define RESULT_DATA(code, len, data) (Result){code, len, data}
+
+typedef enum
+{
+    EntrySetKey = 0x0
+} SpecialEntryIds;
 
 static struct psock socket;
 static uint8_t socket_buffer[16];
@@ -35,6 +52,7 @@ struct
     size_t payload_size;
     size_t bytes_read;
     size_t bytes_left;
+    Result result;
 } current_session;
 
 typedef Result (*command_handler)(ParseState*);
@@ -49,15 +67,15 @@ Result handle_connect(ParseState* state)
     uip_ipaddr_t* parsed_addr;
 
     if (!parse_int(state, &connection.from_sm))
-        return ErrPayloadFormat;
+        return RESULT(ErrPayloadFormat);
     if (!parse_int(state, &connection.from_output))
-        return ErrPayloadFormat;
+        return RESULT(ErrPayloadFormat);
     if (!parse_int(state, &connection.to_sm))
-        return ErrPayloadFormat;
+        return RESULT(ErrPayloadFormat);
     if (!parse_raw_data(state, sizeof(uip_ipaddr_t), (uint8_t**)&parsed_addr))
-        return ErrPayloadFormat;
+        return RESULT(ErrPayloadFormat);
     if (!parse_int(state, &connection.to_input))
-        return ErrPayloadFormat;
+        return RESULT(ErrPayloadFormat);
 
     connection.to_address = *parsed_addr;
     connections_add(&connection);
@@ -67,17 +85,59 @@ Result handle_connect(ParseState* state)
         connection.from_sm, connection.from_output, connection.to_sm,
         uip_ipaddr_to_quad(&connection.to_address), connection.to_input);
 
-    return Ok;
+    return RESULT(Ok);
 }
 
 Result handle_set_key(ParseState* state)
 {
-    return Ok;
+    LOG("handling 'set_key' command\n");
+
+    // The payload format is [sm_id, 16 bit nonce, index, wrapped(key), tag]
+    // where the tag includes the nonce and the index.
+    sm_id id;
+    if (!parse_int(state, &id))
+        return RESULT(ErrPayloadFormat);
+
+    // We do not need to parse the nonce and the index since the verification
+    // procedure inside the SM would need to transform it back to a buffer
+    // anyway in order to pass it as associated data to the unwrap instruction.
+    uint8_t* ad;
+    const size_t AD_LEN = 2 + sizeof(io_index);
+    if (!parse_raw_data(state, AD_LEN, &ad))
+        return RESULT(ErrPayloadFormat);
+
+    uint8_t* cipher;
+    if (!parse_raw_data(state, SANCUS_KEY_SIZE, &cipher))
+        return RESULT(ErrPayloadFormat);
+
+    uint8_t* tag;
+    if (!parse_raw_data(state, SANCUS_TAG_SIZE, &tag))
+        return RESULT(ErrPayloadFormat);
+
+    // The result format is [16 bit result code, tag] where the tag includes the
+    // nonce and the result code.
+    const size_t RESULT_PAYLOAD_SIZE = 2 + SANCUS_TAG_SIZE;
+    void* result_payload = malloc(RESULT_PAYLOAD_SIZE);
+
+    if (result_payload == NULL)
+        return RESULT(ErrInternal);
+
+    uint16_t args[] = {(uint16_t)ad, (uint16_t)cipher, (uint16_t)tag,
+                       (uint16_t)result_payload};
+
+    if (!sm_call_id(id, EntrySetKey, args, sizeof(args) / sizeof(args[0]),
+                    /*retval=*/NULL))
+    {
+        free(result_payload);
+        return RESULT(ErrInternal);
+    }
+
+    return RESULT_DATA(Ok, RESULT_PAYLOAD_SIZE, result_payload);
 }
 
 Result handle_post_event(ParseState* state)
 {
-    return Ok;
+    return RESULT(Ok);
 }
 
 static command_handler command_handlers[] = {
@@ -90,7 +150,8 @@ static PT_THREAD(handle_connection(struct psock* p))
 {
     PSOCK_BEGIN(p);
 
-    uint8_t result = Ok;
+    current_session.payload = NULL;
+    current_session.result = RESULT(Ok);
 
     // The common packet format is [command length payload] where command and
     // length are both 2 bytes and length refers to the size of the payload.
@@ -105,7 +166,7 @@ static PT_THREAD(handle_connection(struct psock* p))
     if (current_session.command >= CommandsEnd)
     {
         LOG("illegal command: %x\n", current_session.command);
-        result = ErrIllegalCommand;
+        current_session.result.code = ErrIllegalCommand;
         goto end;
     }
 
@@ -115,7 +176,7 @@ static PT_THREAD(handle_connection(struct psock* p))
     if (current_session.payload == NULL)
     {
         LOG("out of memory\n");
-        result = ErrInternal;
+        current_session.result.code = ErrInternal;
         goto end;
     }
 
@@ -139,11 +200,18 @@ static PT_THREAD(handle_connection(struct psock* p))
     // Call the correct handler.
     state = create_parse_state(current_session.payload,
                                current_session.payload_size);
-    result = command_handlers[current_session.command](state);
+    current_session.result = command_handlers[current_session.command](state);
     free_parse_state(state);
 
 end:
-    PSOCK_SEND(p, &result, sizeof(result));
+    PSOCK_SEND(p, &current_session.result.code,
+               sizeof(current_session.result.code));
+    PSOCK_SEND(p, current_session.result.payload,
+               current_session.result.payload_size);
+
+    free(current_session.payload);
+    free(current_session.result.payload);
+
     PSOCK_END(p);
 }
 

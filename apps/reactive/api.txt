@@ -1,0 +1,28 @@
+- Keys and tags are the size of Sancus' security parameter.
+- All other values, unless specified otherwise, are 16 bit BE.
+
+set-key request
+===============
+
++-----+-----+-------+----------+---+
+|SM ID|Nonce|Conn ID|Key cipher|Tag|
++-----+-----+-------+----------+---+
+
+AD = Nonce + Conn ID
+
+set-key result
+==============
+
++----+---+
+|Code|Tag|
++----+---+
+
+AD = Nonce + Code
+
+Code:
+- 0 = OK
+- 1 = Illegal connection ID
+- 2 = Wrong tag
+
+Note: Conn ID does not need to be part of the AD since it is assumed the SM will
+reject any set-key request if the tag does not match.
