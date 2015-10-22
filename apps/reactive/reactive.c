@@ -1,19 +1,21 @@
 #include "contiki-net.h"
 
+#include "log.h"
 #include "connections.h"
+#include "events.h"
 
 #include <sancus_support/sm_control.h>
 #include <sancus_support/tools.h>
+#include <sancus_support/global_symtab.h>
 
 #include <stdio.h>
-
-#define LOG(...) printf("Reactive: " __VA_ARGS__)
 
 typedef enum
 {
     Connect   = 0x0,
     SetKey    = 0x1,
     PostEvent = 0x2,
+    Call      = 0x3,
     CommandsEnd
 } Command;
 
@@ -78,7 +80,9 @@ Result handle_connect(ParseState* state)
         return RESULT(ErrPayloadFormat);
 
     connection.to_address = *parsed_addr;
-    connections_add(&connection);
+
+    if (!connections_add(&connection))
+        return RESULT(ErrInternal);
 
     LOG("added connection from SM %u output %u "
         "to SM %u at %u.%u.%u.%u input %u\n",
@@ -140,10 +144,30 @@ Result handle_post_event(ParseState* state)
     return RESULT(Ok);
 }
 
+Result handle_call(ParseState* state)
+{
+    LOG("handling 'call' command\n");
+
+    // The payload format is [sm_id, index]
+    sm_id id;
+    if (!parse_int(state, &id))
+        return RESULT(ErrPayloadFormat);
+
+    uint16_t index;
+    if (!parse_int(state, &index))
+        return RESULT(ErrPayloadFormat);
+
+    if (!sm_call_id(id, index, NULL, 0, NULL))
+        return RESULT(ErrInternal);
+
+    return RESULT(Ok);
+}
+
 static command_handler command_handlers[] = {
     [Connect]   = handle_connect,
     [SetKey]    = handle_set_key,
-    [PostEvent] = handle_post_event
+    [PostEvent] = handle_post_event,
+    [Call]      = handle_call
 };
 
 static PT_THREAD(handle_connection(struct psock* p))
@@ -158,6 +182,7 @@ static PT_THREAD(handle_connection(struct psock* p))
     // We start with receiving/parsing the header.
     const size_t HEADER_SIZE = 4;
     PSOCK_READBUF_LEN(p, HEADER_SIZE);
+
     ParseState* state = create_parse_state(socket_buffer, HEADER_SIZE);
     parse_int(state, &current_session.command);
     parse_int(state, &current_session.payload_size);
@@ -220,6 +245,8 @@ PROCESS(reactive_process, "Reactive process");
 PROCESS_THREAD(reactive_process, ev, data)
 {
     PROCESS_BEGIN();
+
+    add_global_symbol("reactive_handle_output", &reactive_handle_output, NULL);
 
     LOG("started on %u.%u.%u.%u:%u\n",
         uip_ipaddr_to_quad(&uip_hostaddr), REACTIVE_PORT);

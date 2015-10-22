@@ -15,6 +15,7 @@ class Command(enum.IntEnum):
     Connect   = 0x0
     SetKey    = 0x1
     PostEvent = 0x2
+    Call      = 0x3
 
 
 class ResultCode(enum.IntEnum):
@@ -148,6 +149,15 @@ def handle_set_key(sock, args):
         raise Error('Got error code from SM: {}'.format(set_key_code))
 
 
+def handle_call(sock, args):
+    payload = pack_int(args.sm_id) + pack_int(args.entry)
+    sock.sendall(create_packet(Command.Call, payload))
+    result = recv_result(sock)
+
+    if result.code != ResultCode.Ok:
+        raise Error('Error sending call command: {}'.format(result.code))
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--server',
                     help='IP address/host name of the reactive server',
@@ -207,6 +217,18 @@ connect_parser.add_argument('--sm-key',
 connect_parser.add_argument('key',
                             help='Key to set',
                             type=hex_key)
+
+call_parser = subparsers.add_parser('call',
+                                    help='Call an SM')
+call_parser.set_defaults(command_handler=handle_call)
+call_parser.add_argument('--sm-id',
+                         help='ID of the SM',
+                         type=hex_16bit,
+                         required=True)
+call_parser.add_argument('--entry',
+                         help='Entry point of the SM',
+                         type=hex_16bit,
+                         required=True)
 
 args = parser.parse_args()
 

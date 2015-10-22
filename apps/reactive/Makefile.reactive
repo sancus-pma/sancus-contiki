@@ -1,4 +1,4 @@
-reactive_src = reactive.c connections.c
+reactive_src = reactive.c connections.c events.c
 
 # Try to find the sancus-support libraries
 SANCUS_SUPPORT_SEARCH_DIRS = /usr/share/sancus-support /usr/local/share/sancus-support
