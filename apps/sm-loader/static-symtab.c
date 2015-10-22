@@ -6,6 +6,8 @@
 
 STATIC_SYMBOLS_START
     SYMBOL(exit),
+    SYMBOL(malloc),
+    SYMBOL(free),
     SYMBOL(putchar),
     SYMBOL(puts),
     SYMBOL(printf),
