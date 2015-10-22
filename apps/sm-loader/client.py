@@ -7,6 +7,7 @@ import tempfile
 import subprocess
 import binascii
 import os
+import sys
 
 import sancus.crypto
 
@@ -116,5 +117,8 @@ with socket.create_connection((args.server, args.port), timeout=2) as s:
     for file in (symtab_file, linked_sm_file):
         os.remove(file)
 
-    print('SM "{}" loaded with id {} and key {}'
-            .format(args.sm_name, sm_id, to_hex_str(sm_key)))
+    if sys.stdout.isatty():
+        print('SM "{}" loaded with id {} and key {}'
+                .format(args.sm_name, sm_id, to_hex_str(sm_key)))
+    else:
+        print(to_hex_str(sm_key))
