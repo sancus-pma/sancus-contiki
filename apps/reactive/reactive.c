@@ -1,23 +1,16 @@
-#include "contiki-net.h"
+#include "reactive.h"
 
 #include "log.h"
 #include "connections.h"
 #include "events.h"
+
+#include <contiki-net.h>
 
 #include <sancus_support/sm_control.h>
 #include <sancus_support/tools.h>
 #include <sancus_support/global_symtab.h>
 
 #include <stdio.h>
-
-typedef enum
-{
-    Connect   = 0x0,
-    SetKey    = 0x1,
-    PostEvent = 0x2,
-    Call      = 0x3,
-    CommandsEnd
-} Command;
 
 typedef enum
 {
@@ -139,8 +132,23 @@ Result handle_set_key(ParseState* state)
     return RESULT_DATA(Ok, RESULT_PAYLOAD_SIZE, result_payload);
 }
 
-Result handle_post_event(ParseState* state)
+static Result handle_post_event(ParseState* state)
 {
+    // The packet format is [sm_id input_id data]
+    sm_id sm;
+    if (!parse_int(state, &sm))
+        return RESULT(ErrPayloadFormat);
+
+    io_index input;
+    if (!parse_int(state, &input))
+        return RESULT(ErrPayloadFormat);
+
+    uint8_t* payload;
+    size_t payload_len;
+    if (!parse_all_raw_data(state, &payload, &payload_len))
+        return RESULT(ErrPayloadFormat);
+
+    reactive_handle_input(sm, input, payload, payload_len);
     return RESULT(Ok);
 }
 
@@ -246,6 +254,7 @@ PROCESS_THREAD(reactive_process, ev, data)
 {
     PROCESS_BEGIN();
 
+    reactive_events_init();
     add_global_symbol("reactive_handle_output", &reactive_handle_output, NULL);
 
     LOG("started on %u.%u.%u.%u:%u\n",
