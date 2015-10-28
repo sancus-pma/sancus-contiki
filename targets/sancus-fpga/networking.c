@@ -1,5 +1,7 @@
 #include "networking.h"
 
+#include "ipaddr.h"
+
 #include "net/ip/uip.h"
 #include "dev/slip.h"
 
@@ -18,10 +20,9 @@ static void slip_input_byte_wrapper(unsigned char b)
 void networking_init()
 {
     uip_init();
-    uip_ipaddr_t hostaddr, netmask;
-    uip_ipaddr(&hostaddr, 192, 168, 0, 2);
+    uip_ipaddr_t netmask;
     uip_ipaddr(&netmask, 255, 255, 255, 0);
-    uip_sethostaddr(&hostaddr);
+    uip_sethostaddr(&ipaddr);
     uip_setnetmask(&netmask);
     uart_set_receive_cb(slip_input_byte_wrapper);
     tcpip_set_outputfunc(slip_send);

@@ -1,11 +1,15 @@
 DEV  ?= /dev/ttyUSB0
 BAUD ?= 115200
+IP   ?= 192.168.0.2
+
+THIS_DIR = $(dir $(target_makefile))
+SET_IP   = $(THIS_DIR)set-ipaddr.py
 
 CONTIKI_TARGET_DIRS = .
 CONTIKI_TARGET_MAIN = main.c
-CONTIKI_TARGET_SOURCEFILES = putchar.c networking.c
+CONTIKI_TARGET_SOURCEFILES = putchar.c networking.c ipaddr.c
 
-include $(dir $(target_makefile))../common/Makefile.include
+include $(THIS_DIR)../common/Makefile.include
 
 # Add needed sancus-support libraries
 TARGET_LIBFILES += -ldev -lmalloc
@@ -13,7 +17,7 @@ TARGET_LIBFILES += -ldev -lmalloc
 TMP_ELF := $(shell mktemp --suffix=.elf)
 
 run: $(CONTIKI_PROJECT).$(TARGET)
-	cp $^ $(TMP_ELF)
+	$(SET_IP) --ip $(IP) -o $(TMP_ELF) $^
 	sancus-loader -device $(DEV) -baudrate $(BAUD) $(TMP_ELF)
 	rm -f $(TMP_ELF)
 	screen $(DEV) $(BAUD)
