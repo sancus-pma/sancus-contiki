@@ -2,7 +2,7 @@ sm-loader_src = sm-loader.c static-symtab.c symtab-reader.c
 
 # Try to find the sancus-support libraries
 SANCUS_SUPPORT_SEARCH_DIRS = /usr/share/sancus-support /usr/local/share/sancus-support
-SANCUS_SUPPORT_BASE_DIR = $(firstword $(foreach DIR,$(SANCUS_SUPPORT_SEARCH_DIRS),$(wildcard $(DIR))))
+SANCUS_SUPPORT_BASE_DIR ?= $(firstword $(foreach DIR,$(SANCUS_SUPPORT_SEARCH_DIRS),$(wildcard $(DIR))))
 
 ifeq ($(SANCUS_SUPPORT_BASE_DIR),)
 $(error "Unable to find the sancus-support library")
