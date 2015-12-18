@@ -27,7 +27,7 @@ PROJECT_SOURCEFILES += $(SM_FILES)
 
 # Try to find the sancus-compiler libraries
 SANCUS_COMPILER_SEARCH_DIRS = /usr/share/sancus-compiler /usr/local/share/sancus-compiler
-SANCUS_COMPILER_BASE_DIR = $(firstword $(foreach DIR,$(SANCUS_COMPILER_SEARCH_DIRS),$(wildcard $(DIR))))
+SANCUS_COMPILER_BASE_DIR ?= $(firstword $(foreach DIR,$(SANCUS_COMPILER_SEARCH_DIRS),$(wildcard $(DIR))))
 
 ifeq ($(SANCUS_COMPILER_BASE_DIR),)
 $(error "Unable to find the sancus-compiler library")
