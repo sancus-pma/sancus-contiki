@@ -1,5 +1,3 @@
-#include "symtab-reader.h"
-
 #include "contiki-net.h"
 
 #include <sancus_support/sm_control.h>
@@ -15,11 +13,14 @@ static uint8_t socket_buffer[64];
 
 struct
 {
-    uint16_t bytes_read;
-    uint16_t bytes_left;
-    uint8_t* buffer;
-    sm_id    sm_id;
-    char*    symtab_data;
+    uint16_t   bytes_read;
+    uint16_t   bytes_left;
+    uint8_t*   buffer;
+    sm_id      sm_id;
+    ElfModule* sm_elf;
+    size_t     num_symbols;
+    size_t     current_symbol;
+    char       symbol_buf[64];
 } current_session;
 
 static sm_id load_sm_from_buffer()
@@ -98,7 +99,6 @@ static PT_THREAD(handle_connection(struct psock* p))
     current_session.bytes_read = bytes_left;
     current_session.bytes_left = packet_size - bytes_left;
     current_session.sm_id = 0;
-    current_session.symtab_data = NULL;
 
     while (current_session.bytes_left > 0)
     {
@@ -111,15 +111,81 @@ static PT_THREAD(handle_connection(struct psock* p))
     }
 
     current_session.sm_id = load_sm_from_buffer();
+    current_session.sm_elf = sm_get_elf_by_id(current_session.sm_id);
     free(current_session.buffer);
 
     uint16_t id_to_send = uip_htons(current_session.sm_id);
     PSOCK_SEND(p, (uint8_t*)&id_to_send, sizeof(id_to_send));
 
-    current_session.symtab_data = read_symtab_for_sm(current_session.sm_id);
-    PSOCK_SEND(p, (uint8_t*)current_session.symtab_data,
-                  strlen(current_session.symtab_data) + 1);
-    free(current_session.symtab_data);
+    current_session.num_symbols = symtab_get_num_symbols();
+
+    // Send all global symbols.
+    for (current_session.current_symbol = 0;
+         current_session.current_symbol < current_session.num_symbols;
+         current_session.current_symbol++)
+    {
+        Symbol symbol;
+        int is_section;
+        ElfModule* module;
+
+        if (!symtab_get_symbol(current_session.current_symbol,
+                               &symbol, &is_section, &module))
+        {
+            LOG("symtab error");
+            PSOCK_CLOSE_EXIT(p);
+        }
+
+        if (!is_section && module == NULL)
+        {
+            size_t len = snprintf(current_session.symbol_buf,
+                                  sizeof(current_session.symbol_buf),
+                                  "%s = %p;\n", symbol.name, symbol.value);
+
+            if (len > sizeof(current_session.symbol_buf))
+            {
+                LOG("symtab buffer too small");
+                PSOCK_CLOSE_EXIT(p);
+            }
+
+            PSOCK_SEND_STR(p, current_session.symbol_buf);
+        }
+    }
+
+    // Send module sections.
+    PSOCK_SEND_STR(p, "SECTIONS\n{\n");
+
+    for (current_session.current_symbol = 0;
+         current_session.current_symbol < current_session.num_symbols;
+         current_session.current_symbol++)
+    {
+        Symbol symbol;
+        int is_section;
+        ElfModule* module;
+
+        if (!symtab_get_symbol(current_session.current_symbol,
+            &symbol, &is_section, &module))
+        {
+            LOG("symtab error");
+            PSOCK_CLOSE_EXIT(p);
+        }
+
+        if (is_section && module == current_session.sm_elf)
+        {
+            size_t len = snprintf(current_session.symbol_buf,
+                                  sizeof(current_session.symbol_buf),
+                                  "%s %p : {}\n", symbol.name, symbol.value);
+
+            if (len > sizeof(current_session.symbol_buf))
+            {
+                LOG("symtab buffer too small");
+                PSOCK_CLOSE_EXIT(p);
+            }
+
+            PSOCK_SEND_STR(p, current_session.symbol_buf);
+        }
+    }
+
+    PSOCK_SEND_STR(p, "}\n");
 
     PSOCK_CLOSE(p);
     PSOCK_END(p);
