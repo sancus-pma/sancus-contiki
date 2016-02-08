@@ -46,12 +46,12 @@ $(error "Unable to find the sancus-support library")
 endif
 
 # Add include dirs and libraries
-CFLAGS += -I$(SANCUS_SUPPORT_BASE_DIR)/include
+CFLAGS += -I$(SANCUS_SUPPORT_BASE_DIR)/include -ffunction-sections
 TARGET_LIBFILES += -L$(SANCUS_SUPPORT_BASE_DIR)/lib
 
 # Use sancus-ld for linking
 LD = sancus-ld
-LDFLAGS += --standalone --rom $(ROM) --ram $(RAM) -Wl,-u,putchar
+LDFLAGS += --standalone --rom $(ROM) --ram $(RAM) -Wl,-u,putchar,--gc-sections
 
 # Add this directory to the target dirs so that sources and headers will be
 # found here. Note the Contiki's Makefiles will add the target's directory as a
