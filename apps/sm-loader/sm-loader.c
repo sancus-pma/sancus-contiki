@@ -20,7 +20,7 @@ struct
     ElfModule* sm_elf;
     size_t     num_symbols;
     size_t     current_symbol;
-    char       symbol_buf[64];
+    char       symbol_buf[128];
 } current_session;
 
 static sm_id load_sm_from_buffer()
@@ -143,7 +143,7 @@ static PT_THREAD(handle_connection(struct psock* p))
 
             if (len > sizeof(current_session.symbol_buf))
             {
-                LOG("symtab buffer too small");
+                LOG("symtab buffer too small\n");
                 PSOCK_CLOSE_EXIT(p);
             }
 
