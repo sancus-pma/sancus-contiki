@@ -23,8 +23,17 @@ typedef enum
     ButtonReleased
 } ButtonEvent;
 
+typedef struct
+{
+    sm_id    sm;
+    void*    entry;
+    unsigned index;
+    unsigned padding; // Make sure the struct's size is a power of 2.
+} ButtonCallback;
+
 SM_DATA(buttons_driver) int initialized = 0;
-SM_DATA(buttons_driver) volatile ButtonEvent button1_event, button2_event;
+SM_DATA(buttons_driver) ButtonEvent button1_event, button2_event;
+SM_DATA(buttons_driver) ButtonCallback callbacks[2];
 
 SM_FUNC(buttons_driver) ButtonEvent check_button(port1_data_t* data,
                                                  uint8_t button_bit)
@@ -94,9 +103,42 @@ SM_ENTRY(buttons_driver) void buttons_driver_init()
     initialized = 1;
 }
 
+SM_FUNC(buttons_driver) void do_callback(Button button, ButtonEvent* event)
+{
+    if (*event == ButtonNotChanged)
+        return;
+
+    ButtonCallback* cb = &callbacks[button];
+
+    // The event will either be handled by the callback or ignored. In either
+    // case, we should forget that the event happened now to ensure that we
+    // don't try to handle the same event again.
+    int pressed = *event == ButtonPressed;
+    *event = ButtonNotChanged;
+
+    if (cb->sm == 0)
+        return;
+
+    sancus_call(cb->entry, cb->index, pressed);
+}
+
 SM_ENTRY(buttons_driver) void buttons_driver_handle_events(void)
 {
-    puts("Handling events");
+    do_callback(Button1, &button1_event);
+    do_callback(Button2, &button2_event);
+}
+
+SM_ENTRY(buttons_driver) int buttons_driver_register_callback(
+                                    Button button, void* entry, unsigned index)
+{
+    if (button != Button1 && button != Button2)
+        return 0;
+
+    ButtonCallback* cb = &callbacks[button];
+    cb->sm = sancus_get_caller_id();
+    cb->entry = entry;
+    cb->index = index;
+    return 1;
 }
 
 DECLARE_SM(buttons_driver, 0x1234);
