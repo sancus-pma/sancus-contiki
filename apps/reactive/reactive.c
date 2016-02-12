@@ -156,7 +156,7 @@ Result handle_call(ParseState* state)
 {
     LOG("handling 'call' command\n");
 
-    // The payload format is [sm_id, index]
+    // The payload format is [sm_id, index, args]
     sm_id id;
     if (!parse_int(state, &id))
         return RESULT(ErrPayloadFormat);
@@ -165,7 +165,21 @@ Result handle_call(ParseState* state)
     if (!parse_int(state, &index))
         return RESULT(ErrPayloadFormat);
 
-    if (!sm_call_id(id, index, NULL, 0, NULL))
+    uint8_t* payload;
+    size_t payload_len;
+    parse_all_raw_data(state, &payload, &payload_len);
+
+    uint16_t args_buf[] = {(uint16_t)payload, payload_len};
+    uint16_t* args = NULL;
+    size_t nargs = 0;
+
+    if (payload_len > 0)
+    {
+        args = args_buf;
+        nargs = 2;
+    }
+
+    if (!sm_call_id(id, index, args, nargs, NULL))
         return RESULT(ErrInternal);
 
     return RESULT(Ok);
