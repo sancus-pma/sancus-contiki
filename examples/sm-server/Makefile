@@ -13,5 +13,8 @@ APPDIRS += ../../apps
 # Should point to <GIT_ROOT>/contiki
 CONTIKI = ../../contiki
 
+PROJECT_SOURCEFILES = buttons_process.c
+SM_FILES = buttons.c buttons_driver.c port1_mmio.S port1_mmio_decl.c
+
 CONTIKI_WITH_IPV4 = 1
 include $(CONTIKI)/Makefile.include

@@ -1,6 +1,7 @@
 DEV  ?= /dev/ttyUSB0
 BAUD ?= 115200
 IP   ?= 192.168.0.2
+VKEY ?= 4078d505d82099ba
 
 THIS_DIR = $(dir $(target_makefile))
 SET_IP   = $(THIS_DIR)set-ipaddr.py
@@ -14,10 +15,12 @@ include $(THIS_DIR)../common/Makefile.include
 # Add needed sancus-support libraries
 TARGET_LIBFILES += -ldev -lmalloc
 
-TMP_ELF := $(shell mktemp --suffix=.elf)
+TMP_ELF1 := $(shell mktemp --suffix=.elf)
+TMP_ELF2 := $(shell mktemp --suffix=.elf)
 
 run: $(CONTIKI_PROJECT).$(TARGET)
-	$(SET_IP) --ip $(IP) -o $(TMP_ELF) $^
-	sancus-loader -device $(DEV) -baudrate $(BAUD) $(TMP_ELF)
-	rm -f $(TMP_ELF)
+	$(SET_IP) --ip $(IP) -o $(TMP_ELF1) $^
+	sancus-crypto --key $(VKEY) --fill-macs -o $(TMP_ELF2) $(TMP_ELF1)
+	sancus-loader -device $(DEV) -baudrate $(BAUD) $(TMP_ELF2)
+	rm -f $(TMP_ELF1) $(TMP_ELF2)
 	screen $(DEV) $(BAUD)

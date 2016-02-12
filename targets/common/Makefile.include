@@ -10,14 +10,13 @@ include $(CONTIKI_CPU)/Makefile.msp430
 # Use sancus-cc for all files listed in SM_FILES
 # NOTE: the if... filter... cruft just checks if the file name equals
 # $(CONTIKI_PROJECT).c
-define SM_RULES =
+define SM_RULES
 SM_OBJECT_$(1) = \
     $(if $(filter $(CONTIKI_PROJECT).c,$(1)),\
          $(CONTIKI_PROJECT).co,\
          $(OBJECTDIR)/$(basename $(1)).o)
 
 $$(SM_OBJECT_$(1)): CC = sancus-cc
-$$(SM_OBJECT_$(1)): CFLAGS = $(filter-out -gstabs+,$(CFLAGS))
 endef
 
 $(foreach FILE,$(SM_FILES),$(eval $(call SM_RULES,$(FILE))))
@@ -51,7 +50,7 @@ TARGET_LIBFILES += -L$(SANCUS_SUPPORT_BASE_DIR)/lib
 
 # Use sancus-ld for linking
 LD = sancus-ld
-LDFLAGS += --standalone --rom $(ROM) --ram $(RAM) -Wl,-u,putchar,--gc-sections
+LDFLAGS += --standalone --rom $(ROM) --ram $(RAM) -Wl,-u,putchar
 
 # Add this directory to the target dirs so that sources and headers will be
 # found here. Note the Contiki's Makefiles will add the target's directory as a
