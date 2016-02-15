@@ -1,5 +1,6 @@
 #include "buttons_process.h"
 #include "buttons.h"
+#include "lcd.h"
 
 #include <stdio.h>
 
@@ -14,6 +15,9 @@ PROCESS_THREAD(buttons_process, ev, data)
     LOG("started\n");
 
     buttons_init();
+    lcd_init();
+
+    lcd_write("LCD started");
 
     while (1)
     {

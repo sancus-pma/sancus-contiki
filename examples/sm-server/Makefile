@@ -16,7 +16,8 @@ CONTIKI = ../../contiki
 PROJECT_SOURCEFILES = buttons_process.c
 
 ifndef NO_SANCUS
-SM_FILES = buttons.c buttons_driver.c port1_mmio.S port1_mmio_decl.c
+SM_FILES = buttons.c buttons_driver.c port1_mmio.S port1_mmio_decl.c \
+           lcd.c lcd_driver.c lcd_mmio.S lcd_mmio_decl.c
 else
 PROJECT_SOURCEFILES += buttons_no_sancus.c lcd_no_sancus.c
 endif
