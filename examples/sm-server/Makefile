@@ -18,7 +18,7 @@ PROJECT_SOURCEFILES = buttons_process.c
 ifndef NO_SANCUS
 SM_FILES = buttons.c buttons_driver.c port1_mmio.S port1_mmio_decl.c
 else
-PROJECT_SOURCEFILES += buttons_no_sancus.c
+PROJECT_SOURCEFILES += buttons_no_sancus.c lcd_no_sancus.c
 endif
 
 CONTIKI_WITH_IPV4 = 1
