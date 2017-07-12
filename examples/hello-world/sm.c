@@ -2,7 +2,7 @@
 
 #include <sancus/sm_support.h>
 
-void SM_ENTRY("sm") sm_entry(void)
+void SM_ENTRY(sm) sm_entry(void)
 {
     puts("Hello from an SM");
 }

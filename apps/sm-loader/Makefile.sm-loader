@@ -2,6 +2,9 @@ sm-loader_src = sm-loader.c static-symtab.c
 
 # Try to find the sancus-support libraries
 SANCUS_SUPPORT_SEARCH_DIRS = /usr/share/sancus-support /usr/local/share/sancus-support
+ifdef SANCUS_DIR
+SANCUS_SUPPORT_SEARCH_DIRS += ${SANCUS_DIR}/share/sancus-support
+endif
 SANCUS_SUPPORT_BASE_DIR ?= $(firstword $(foreach DIR,$(SANCUS_SUPPORT_SEARCH_DIRS),$(wildcard $(DIR))))
 
 ifeq ($(SANCUS_SUPPORT_BASE_DIR),)
