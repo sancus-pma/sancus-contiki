@@ -1,8 +1,8 @@
 #include "event-loop.h"
 #include "networking.h"
 
-#include <stdio.h>
 #include <msp430.h>
+#include <stdio.h>
 
 #include <sancus_support/uart.h>
 #include <sancus_support/tsc.h>
@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     networking_init();
     asm volatile("eint");
 
-    puts("sancus-fpga main()");
+    puts("sancus-net main()");
 
     event_loop_start();
 }

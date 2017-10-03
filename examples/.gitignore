@@ -1,8 +1,10 @@
 *.a
 *.map
-*.sancus-sim
-*.sancus-fpga
+*.sancus-plain
+*.sancus-net
 sancus_sim.fst
 sim-input.bin
 sim-output.bin
 obj_*/
+
+symbols.*

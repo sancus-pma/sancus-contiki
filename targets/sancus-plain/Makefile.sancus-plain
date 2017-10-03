@@ -1,0 +1,19 @@
+CONTIKI_TARGET_DIRS = .
+CONTIKI_TARGET_MAIN = main.c
+
+include $(dir $(target_makefile))../common/Makefile.include
+
+TARGET_LIBFILES += -ldev -lmalloc -lsm-io
+
+TMP_ELF := $(shell mktemp --suffix=.elf)
+
+crypto: $(CONTIKI_PROJECT).$(TARGET)
+	sancus-crypto --key $(VKEY) --fill-macs -o $(TMP_ELF) $^
+
+sim: crypto
+	sancus-sim --rom=$(ROM) --ram=$(RAM) $(TMP_ELF)
+	rm -f $(TMP_ELF)
+
+load: crypto
+	sancus-loader -device $(DEV) -baudrate $(BAUD) $(TMP_ELF)
+	rm -f $(TMP_ELF)

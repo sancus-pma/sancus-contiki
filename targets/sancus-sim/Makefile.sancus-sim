@@ -1,9 +1,0 @@
-CONTIKI_TARGET_DIRS = .
-CONTIKI_TARGET_MAIN = main.c
-CONTIKI_TARGET_SOURCEFILES = putchar.c
-
-include $(dir $(target_makefile))../common/Makefile.include
-
-run: $(CONTIKI_PROJECT).$(TARGET)
-	sancus-sim --rom=$(ROM) --ram=$(RAM) $^
-

@@ -1,6 +1,18 @@
 # Common parameters
-ROM ?= 41K
-RAM ?= 16K
+ROM  ?= 41K
+RAM  ?= 16K
+DEV  ?= /dev/ttyUSB0
+BAUD ?= 115200
+IP   ?= 192.168.0.2
+VID  ?= 1234
+
+ifeq ($(SECURITY), 128)
+    SANCUS_KEY      = deadbeefcafebabec0defeeddefec8ed
+else
+    SANCUS_KEY      = deadbeefcafebabe
+endif
+
+VKEY = $(shell sancus-crypto --key $(SANCUS_KEY) --gen-vendor-key $(VID) | xxd -p)
 
 # CPU Makefile
 MCU=msp430f1611
